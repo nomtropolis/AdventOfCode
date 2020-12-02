@@ -1,5 +1,3 @@
-from collections import Counter
-
 INPUT_FILE = "../input.txt"
 
 def is_valid(line):
