@@ -27,26 +27,26 @@ def build_node_index():
     node_index = {}
     with open(INPUT_FILE) as input_file:
         for line in input_file:
-            print("On Raw line: {}".format(line))
             words = line[:-2].split(" ")
             bag_color = isolate_color_from_words(words)
-            line_parent_node = Node(bag_color, [], [])
-            does_contain = get_contains_from_words(words)
-            for other_bag in does_contain:
+            parent = Node(bag_color, [], [])
+            
+            for other_bag in get_contains_from_words(words):
                 num_bags = int(other_bag[0:other_bag.find(" ")])
                 clean_bag = other_bag[other_bag.find(" ") + 1:]
+                
                 for x in range(0, num_bags):
-                    rule_node = Node(clean_bag, line_parent_node, [])
-                    line_parent_node.children.append(rule_node)
-            node_index[bag_color] = line_parent_node
+                    rule_node = Node(clean_bag, parent, [])
+                    parent.children.append(rule_node)
+                    
+            node_index[bag_color] = parent
     return node_index
 
 
 def add_bags_to_bag(bag, node_index):
-    copy_dict = node_index.copy()
     if bag.children:
         for i, child_bag in enumerate(bag.children):
-            bag.children[i] = add_bags_to_bag(copy_dict[child_bag.color], node_index)
+            bag.children[i] = add_bags_to_bag(node_index[child_bag.color], node_index)
     return bag
 
 
