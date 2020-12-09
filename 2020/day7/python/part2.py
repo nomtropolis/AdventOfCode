@@ -50,16 +50,16 @@ def add_bags_to_bag(bag, node_index):
     return bag
 
 
-def recurse_count(tree, count):
+def recurse_count(tree):
     count = 0
     for node in tree.children:
         count += 1
-        count += recurse_count(node, count)
+        count += recurse_count(node)
     return count
 
 
 if __name__ == "__main__":
     node_index = build_node_index()
     bag_tree = add_bags_to_bag(node_index["shiny gold"], node_index)
-    num_bags = recurse_count(bag_tree, 0)
+    num_bags = recurse_count(bag_tree)
     print("The answer is: {}".format(num_bags))
