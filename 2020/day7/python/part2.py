@@ -1,27 +1,28 @@
-from pprint import pprint
-
-#INPUT_FILE = "../input.example.txt"
-DEBUG = True
 INPUT_FILE = "../input.txt"
 
-def debug_decorator(func):
-    def wrapper(*args, **kwargs):
-        if DEBUG:
-            print("Calling: {} with positional arg {} and keyword args {}".format(func.__name__, args, kwargs))
-        result = func(*args, **kwargs)
-        if DEBUG:
-            print("Result: {}".format(result))
-            print("Completed calling: {}\n".format(func.__name__))
-        return result
-    return wrapper
+class Node(object):
+    def __init__(self, color, parent, children):
+        self.color = color
+        self.parent = parent
+        self.children = children
 
-@debug_decorator
+    def __str__(self):
+        if self.parent:
+            return "Node Color: {}, Parent Color: {}, num kids: {}, kids: {}".format(self.color, self.parent.color, len(self.children), self.children)
+        else:
+            return "Node Color: {}, Parent Color: (root), num kids: {}, kids: {}".format(self.color, len(self.children), self.children)
+
+    def __repr__(self):
+        return Node.__str__(self)
+
+    def add_child(self, child):
+        self.children.append(child)
+
 def isolate_color_from_words(words):
     color = " ".join(words[:2])
     del words[:3]
     return color
 
-@debug_decorator
 def get_contains_from_words(words):
     word_str = " ".join(words)
     if word_str == "contain no other bags":
@@ -30,36 +31,43 @@ def get_contains_from_words(words):
     bags = " ".join(words).replace(" bags", "").replace(" bag", "").split(", ")
     return bags
 
-@debug_decorator
-def build_inverse_rule_dictionary():
-    can_be_contained_by = {}
+def build_node_index():
+    node_index = {}
     with open(INPUT_FILE) as input_file:
         for line in input_file:
-            line = line[:-2]
-            words = line.split(" ")
+            print("On Raw line: {}".format(line))
+            words = line[:-2].split(" ")
             bag_color = isolate_color_from_words(words)
-            can_contain = get_contains_from_words(words)
-            for other_bag in can_contain:
+            line_parent_node = Node(bag_color, [], [])
+            does_contain = get_contains_from_words(words)
+            for other_bag in does_contain:
+                num_bags = int(other_bag[0:other_bag.find(" ")])
                 clean_bag = other_bag[other_bag.find(" ") + 1:]
-                can_be_contained_by.setdefault(clean_bag, []).append(bag_color)
-    return can_be_contained_by
+                for x in range(0, num_bags):
+                    rule_node = Node(clean_bag, line_parent_node, [])
+                    line_parent_node.add_child(rule_node)
+            node_index[bag_color] = line_parent_node
+    return node_index
 
-@debug_decorator
-def recurse_count(base, all_colors, counted_colors=[]):
+def add_bags_to_bag(bag, node_index):
+    copy_dict = node_index.copy()
+    if bag.children:
+        for i, child_bag in enumerate(bag.children):
+            if child_bag is None:
+                break
+            bag.children[i] = add_bags_to_bag(copy_dict[child_bag.color], node_index)
+    return bag
+
+def recurse_count(tree, count):
     count = 0
-    for color in base:
-        print("Working on: {}".format(color))
-        if color not in counted_colors:
-            count += 1
-            counted_colors.append(color)
-        if all_colors.get(color, []):
-            count += recurse_count(all_colors[color], all_colors, counted_colors)
+    for node in tree.children:
+        count += 1
+        count += recurse_count(node, count)
     return count
-
-def main(rule_dictionary):
-    shiny_gold_bag_holders = recurse_count(rule_dictionary["shiny gold"], rule_dictionary)
-    print("Answer is: {}".format(shiny_gold_bag_holders))
+    
 
 if __name__ == "__main__":
-    rules_dictionary = build_inverse_rule_dictionary()
-    main(rules_dictionary)
+    node_index = build_node_index()
+    bag_tree = add_bags_to_bag(node_index["shiny gold"], node_index)
+    num_bags = recurse_count(bag_tree, 0)
+    print("The answer is: {}".format(num_bags))
