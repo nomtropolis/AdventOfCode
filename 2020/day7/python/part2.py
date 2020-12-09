@@ -1,27 +1,18 @@
 INPUT_FILE = "../input.txt"
 
+
 class Node(object):
     def __init__(self, color, parent, children):
         self.color = color
         self.parent = parent
         self.children = children
 
-    def __str__(self):
-        if self.parent:
-            return "Node Color: {}, Parent Color: {}, num kids: {}, kids: {}".format(self.color, self.parent.color, len(self.children), self.children)
-        else:
-            return "Node Color: {}, Parent Color: (root), num kids: {}, kids: {}".format(self.color, len(self.children), self.children)
-
-    def __repr__(self):
-        return Node.__str__(self)
-
-    def add_child(self, child):
-        self.children.append(child)
 
 def isolate_color_from_words(words):
     color = " ".join(words[:2])
     del words[:3]
     return color
+
 
 def get_contains_from_words(words):
     word_str = " ".join(words)
@@ -30,6 +21,7 @@ def get_contains_from_words(words):
     del words[0]
     bags = " ".join(words).replace(" bags", "").replace(" bag", "").split(", ")
     return bags
+
 
 def build_node_index():
     node_index = {}
@@ -45,18 +37,18 @@ def build_node_index():
                 clean_bag = other_bag[other_bag.find(" ") + 1:]
                 for x in range(0, num_bags):
                     rule_node = Node(clean_bag, line_parent_node, [])
-                    line_parent_node.add_child(rule_node)
+                    line_parent_node.children.append(rule_node)
             node_index[bag_color] = line_parent_node
     return node_index
+
 
 def add_bags_to_bag(bag, node_index):
     copy_dict = node_index.copy()
     if bag.children:
         for i, child_bag in enumerate(bag.children):
-            if child_bag is None:
-                break
             bag.children[i] = add_bags_to_bag(copy_dict[child_bag.color], node_index)
     return bag
+
 
 def recurse_count(tree, count):
     count = 0
@@ -64,7 +56,7 @@ def recurse_count(tree, count):
         count += 1
         count += recurse_count(node, count)
     return count
-    
+
 
 if __name__ == "__main__":
     node_index = build_node_index()
